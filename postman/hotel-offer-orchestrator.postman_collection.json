@@ -1,0 +1,151 @@
+{
+	"info": {
+		"_postman_id": "hotel-offer-orchestrator-collection",
+		"name": "Hotel Offer Orchestrator",
+		"description": "API collection for Hotel Offer Orchestrator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Hotels",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/hotels?city=delhi",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"hotels"
+					],
+					"query": [
+						{
+							"key": "city",
+							"value": "delhi",
+							"description": "City name"
+						}
+					]
+				},
+				"description": "Fetches hotels from suppliers using Temporal workflow, deduplicates by name, selects cheapest prices, and caches in Redis."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Hotels with Price Filter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/hotels?city=delhi&minPrice=5000&maxPrice=7000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"hotels"
+					],
+					"query": [
+						{
+							"key": "city",
+							"value": "delhi",
+							"description": "City name"
+						},
+						{
+							"key": "minPrice",
+							"value": "5000",
+							"description": "Minimum price"
+						},
+						{
+							"key": "maxPrice",
+							"value": "7000",
+							"description": "Maximum price"
+						}
+					]
+				},
+				"description": "Fetches cached hotels from Redis and filters by price range. Note: Requires hotels to be cached first (call Get Hotels endpoint without price filters)."
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"health"
+					]
+				},
+				"description": "Checks the health status of supplier APIs (Supplier A and Supplier B)."
+			},
+			"response": []
+		},
+		{
+			"name": "Supplier A - Mock Endpoint",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/supplierA/hotels?city=delhi",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"supplierA",
+						"hotels"
+					],
+					"query": [
+						{
+							"key": "city",
+							"value": "delhi"
+						}
+					]
+				},
+				"description": "Mock endpoint for Supplier A hotels"
+			},
+			"response": []
+		},
+		{
+			"name": "Supplier B - Mock Endpoint",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/supplierB/hotels?city=delhi",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"supplierB",
+						"hotels"
+					],
+					"query": [
+						{
+							"key": "city",
+							"value": "delhi"
+						}
+					]
+				},
+				"description": "Mock endpoint for Supplier B hotels"
+			},
+			"response": []
+		}
+	]
+}
+

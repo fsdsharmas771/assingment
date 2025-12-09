@@ -56,9 +56,6 @@ services:
     depends_on:
       - redis
       - temporal
-    volumes:
-      - ./src:/app/src
-      - ./dist:/app/dist
 
   worker:
     build:
@@ -74,9 +71,6 @@ services:
       - redis
       - temporal
       - app
-    volumes:
-      - ./src:/app/src
-      - ./dist:/app/dist
 
 volumes:
   temporal-postgresql-data:

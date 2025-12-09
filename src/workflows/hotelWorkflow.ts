@@ -1,6 +1,13 @@
 import * as wf from '@temporalio/workflow';
-import { fetchSupplierA, fetchSupplierB, saveToRedis, getFromRedis } from '../activities/hotelActivities';
+import type * as activities from '../temporal/activities';
 import { Hotel } from '../redis/hotelCache';
+
+const { fetchSupplierA, fetchSupplierB, saveToRedis, getFromRedis } = wf.proxyActivities<typeof activities>({
+  startToCloseTimeout: '30s',
+  retry: {
+    maximumAttempts: 3,
+  },
+});
 
 export interface HotelWorkflowInput {
   city: string;
@@ -14,23 +21,16 @@ export async function hotelComparisonWorkflow(input: HotelWorkflowInput): Promis
   const { city } = input;
 
   // Check Redis first
-  const cachedHotels = await wf.executeActivity(getFromRedis, city, {
-    startToCloseTimeout: '10s',
-  });
+  const cachedHotels = await getFromRedis(city);
 
   if (cachedHotels && cachedHotels.length > 0) {
-    console.log(`Returning cached hotels for city: ${city}`);
     return { hotels: cachedHotels };
   }
 
   // Fetch from both suppliers in parallel
   const [supplierAHotels, supplierBHotels] = await Promise.all([
-    wf.executeActivity(fetchSupplierA, city, {
-      startToCloseTimeout: '30s',
-    }),
-    wf.executeActivity(fetchSupplierB, city, {
-      startToCloseTimeout: '30s',
-    }),
+    fetchSupplierA(city),
+    fetchSupplierB(city),
   ]);
 
   // Deduplicate by name and select cheapest price
@@ -56,9 +56,7 @@ export async function hotelComparisonWorkflow(input: HotelWorkflowInput): Promis
   const deduplicatedHotels = Array.from(hotelMap.values());
 
   // Save to Redis
-  await wf.executeActivity(saveToRedis, [city, deduplicatedHotels], {
-    startToCloseTimeout: '10s',
-  });
+  await saveToRedis(city, deduplicatedHotels);
 
   return { hotels: deduplicatedHotels };
 }

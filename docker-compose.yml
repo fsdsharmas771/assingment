@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  temporal:
+    image: temporalio/auto-setup:1.22.0
+    ports:
+      - "7233:7233"
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=temporal-postgresql
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    depends_on:
+      - temporal-postgresql
+
+  temporal-postgresql:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+      - POSTGRES_DB=temporal
+    volumes:
+      - temporal-postgresql-data:/var/lib/postgresql/data
+
+  temporal-ui:
+    image: temporalio/ui:2.21.3
+    ports:
+      - "8233:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - temporal
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TEMPORAL_ADDRESS=temporal:7233
+      - API_BASE_URL=http://app:3000
+      - SUPPLIER_A_URL=http://app:3000/supplierA/hotels
+      - SUPPLIER_B_URL=http://app:3000/supplierB/hotels
+    depends_on:
+      - redis
+      - temporal
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TEMPORAL_ADDRESS=temporal:7233
+      - API_BASE_URL=http://app:3000
+    command: npm run worker
+    depends_on:
+      - redis
+      - temporal
+      - app
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+
+volumes:
+  temporal-postgresql-data:
+  redis-data:
+
+

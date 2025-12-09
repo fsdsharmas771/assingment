@@ -51,8 +51,8 @@ services:
       - REDIS_PORT=6379
       - TEMPORAL_ADDRESS=temporal:7233
       - API_BASE_URL=http://app:3000
-      - SUPPLIER_A_URL=http://app:3000/supplierA/hotels
-      - SUPPLIER_B_URL=http://app:3000/supplierB/hotels
+      - SUPPLIER_A_URL=http://app:3000/supplier/supplierA/hotels
+      - SUPPLIER_B_URL=http://app:3000/supplier/supplierB/hotels
     depends_on:
       - redis
       - temporal

@@ -1,16 +1,15 @@
 import express, { Express } from 'express';
-import supplierRoutes from './routes/supplierRoutes';
-import healthRoutes from './routes/healthRoutes';
-import hotelRoutes from './routes/hotelRoutes';
+import mainRouter from './routes/main.routes';
+import { globalErrorHandler } from './middleware/globalErrorMiddleware';
 
 const app: Express = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/', supplierRoutes);
-app.use('/', healthRoutes);
-app.use('/', hotelRoutes);
+app.use('/', mainRouter);
+
+app.use(globalErrorHandler);
 
 export default app;
 

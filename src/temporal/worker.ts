@@ -11,7 +11,12 @@ async function run() {
     namespace: 'default',
     taskQueue: 'hotel-offer-queue',
     workflowsPath: require.resolve('../workflows/hotelWorkflow'),
-    activities,
+    activities: {
+      fetchSupplierA: activities.fetchSupplierA,
+      fetchSupplierB: activities.fetchSupplierB,
+      saveToRedis: activities.saveToRedis,
+      getFromRedis: activities.getFromRedis,
+    },
   });
 
   console.log('Temporal Worker started');
@@ -22,4 +27,5 @@ run().catch((err) => {
   console.error('Worker failed:', err);
   process.exit(1);
 });
+
 

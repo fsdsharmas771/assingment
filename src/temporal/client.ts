@@ -19,3 +19,4 @@ export async function getTemporalClient(): Promise<Client> {
   return clientInstance;
 }
 
+

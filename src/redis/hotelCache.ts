@@ -39,3 +39,4 @@ export function filterHotelsByPrice(hotels: Hotel[], minPrice?: number, maxPrice
   });
 }
 
+

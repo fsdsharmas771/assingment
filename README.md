@@ -36,7 +36,7 @@ cd hotel-offer-orchestrator
 
 2. Build and start all services:
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This will start:
@@ -55,7 +55,7 @@ npm install
 
 2. Start Temporal Server and Redis (using Docker):
 ```bash
-docker-compose up temporal temporal-postgresql redis -d
+docker compose up temporal temporal-postgresql redis -d
 ```
 
 3. Build the project:
@@ -79,44 +79,21 @@ npm run worker
 
 Fetches hotels from suppliers, deduplicates by name, selects cheapest prices, and caches in Redis.
 
-**Endpoint:** `GET /api/hotels?city=delhi`
+**Endpoint:** `GET /hotel?city=delhi`
 
 **Query Parameters:**
 - `city` (required) - City name (e.g., "delhi")
 
 **Example Request:**
 ```bash
-curl "http://localhost:3000/api/hotels?city=delhi"
-```
-
-**Example Response:**
-```json
-{
-  "hotels": [
-    {
-      "hotelId": "b1",
-      "name": "Holtin",
-      "price": 5340,
-      "city": "delhi",
-      "commissionPct": 20
-    },
-    {
-      "hotelId": "a2",
-      "name": "Grand Plaza",
-      "price": 7500,
-      "city": "delhi",
-      "commissionPct": 20
-    }
-  ],
-  "count": 2
-}
+curl "http://localhost:3000/hotel?city=delhi"
 ```
 
 ### 2. Get Hotels with Price Filter (from Redis)
 
 Fetches cached hotels from Redis and filters by price range.
 
-**Endpoint:** `GET /api/hotels?city=delhi&minPrice=5000&maxPrice=7000`
+**Endpoint:** `GET /hotel?city=delhi&minPrice=5000&maxPrice=7000`
 
 **Query Parameters:**
 - `city` (required) - City name
@@ -125,23 +102,7 @@ Fetches cached hotels from Redis and filters by price range.
 
 **Example Request:**
 ```bash
-curl "http://localhost:3000/api/hotels?city=delhi&minPrice=5000&maxPrice=7000"
-```
-
-**Example Response:**
-```json
-{
-  "hotels": [
-    {
-      "hotelId": "b1",
-      "name": "Holtin",
-      "price": 5340,
-      "city": "delhi",
-      "commissionPct": 20
-    }
-  ],
-  "count": 1
-}
+curl "http://localhost:3000/hotel?city=delhi&minPrice=5000&maxPrice=7000"
 ```
 
 ### 3. Health Check
@@ -150,33 +111,16 @@ Checks the health status of supplier APIs.
 
 **Endpoint:** `GET /health`
 
-**Example Request:**
-```bash
-curl "http://localhost:3000/health"
-```
-
-**Example Response:**
-```json
-{
-  "status": "UP",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "services": {
-    "supplierA": "UP",
-    "supplierB": "UP"
-  }
-}
-```
-
 ### Mock Supplier APIs
 
 The application includes mock supplier endpoints for testing:
 
-- `GET /supplierA/hotels?city=delhi`
-- `GET /supplierB/hotels?city=delhi`
+- `GET /supplier/supplierA/hotels?city=delhi`
+- `GET /supplier/supplierB/hotels?city=delhi`
 
 ## How It Works
 
-1. **Client Request**: Client calls `/api/hotels?city=delhi`
+1. **Client Request**: Client calls `/hotel?city=delhi`
 2. **Temporal Workflow**: Express API triggers a Temporal Workflow
 3. **Parallel Fetching**: Workflow executes two activities in parallel:
    - `fetchSupplierA(city)`
@@ -198,20 +142,40 @@ When `minPrice` or `maxPrice` parameters are provided:
 ```
 hotel-offer-orchestrator/
 ├── src/
-│   ├── activities/          # (removed - activities moved to temporal/)
-│   ├── workflows/           # Temporal workflows
-│   │   └── hotelWorkflow.ts
-│   ├── temporal/            # Temporal client, worker, and activities
+│   ├── temporal/            # Temporal client, worker, activities
 │   │   ├── client.ts
 │   │   ├── worker.ts
 │   │   └── activities.ts
+│   ├── workflows/           # Temporal workflows
+│   │   └── hotelWorkflow.ts
 │   ├── redis/               # Redis client and utilities
 │   │   ├── client.ts
 │   │   └── hotelCache.ts
-│   ├── routes/              # Express routes
-│   │   ├── hotelRoutes.ts
-│   │   ├── supplierRoutes.ts
-│   │   └── healthRoutes.ts
+│   ├── module/              # Feature modules (routes + domain logic)
+│   │   ├── hotel/
+│   │   │   ├── hotel.routes.ts
+│   │   │   └── hotel.constants.ts
+│   │   ├── health/
+│   │   │   ├── health.routes.ts
+│   │   │   └── health.constants.ts
+│   │   └── supplier/
+│   │       ├── supplier.routes.ts
+│   │       ├── supplier.data.ts
+│   │       └── supplier.constants.ts
+│   ├── routes/
+│   │   └── main.routes.ts   # Mounts feature routes
+│   ├── middleware/          # Global error handling
+│   │   └── globalErrorMiddleware.ts
+│   ├── constants/           # Common enums/messages
+│   │   └── common.constants.ts
+│   ├── utils/
+│   │   └── sendResponse.ts
+│   ├── error/
+│   │   └── AppError.ts
+│   ├── logger/
+│   │   ├── index.ts
+│   │   ├── devLogger.ts
+│   │   └── prodLogger.ts
 │   ├── app.ts               # Express app configuration
 │   └── server.ts            # Server entry point
 ├── postman/                 # Postman collection
@@ -229,6 +193,7 @@ hotel-offer-orchestrator/
 - `REDIS_PORT` - Redis port (default: 6379)
 - `TEMPORAL_ADDRESS` - Temporal server address (default: localhost:7233)
 - `API_BASE_URL` - Base URL for supplier APIs (default: http://localhost:3000)
+- `NODE_ENV` - Environment (default: DEV, set PRODUCTION for prod logging)
 
 ## Redis Key Format
 
@@ -238,8 +203,6 @@ hotel-offer-orchestrator/
 ## Temporal UI
 
 Access the Temporal UI at: `http://localhost:8233`
-
-View workflow executions, activity status, and workflow history.
 
 ## Testing
 
@@ -255,4 +218,3 @@ Use the provided Postman collection in the `postman/` directory to test all endp
 ## License
 
 ISC
-

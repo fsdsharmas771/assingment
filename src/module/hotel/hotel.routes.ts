@@ -37,7 +37,7 @@ hotelRouter.get('/', async (req: Request, res: Response, next: NextFunction) => 
     const client = await getTemporalClient();
     const handle = await client.workflow.start(hotelComparisonWorkflow, {
       taskQueue: 'hotel-offer-queue',
-      workflowId: `hotel-comparison-${city}-${Date.now()}`,
+      workflowId: `hotel-comparison-${city}}`,
       args: [{ city: city.toLowerCase() }],
     });
 

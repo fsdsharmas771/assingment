@@ -7,6 +7,6 @@ const mainRouter = Router();
 
 mainRouter.use('/health', healthRouter);
 mainRouter.use('/supplier', supplierRouter);
-mainRouter.use('/hotel', hotelRouter);
+mainRouter.use('/api/hotel', hotelRouter);
 
 export default mainRouter;
